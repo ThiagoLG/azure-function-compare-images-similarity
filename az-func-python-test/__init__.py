@@ -94,9 +94,8 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
 
     percentage = len(good_points) / number_keypoints * 100
 
-    # retorna a porcentagem de semelhança
+    # retorna a porcentagem de semelhança -
     return func.HttpResponse(
         f"Percentual de semelhança: {percentage}%",
         status_code=200
     )
-    
