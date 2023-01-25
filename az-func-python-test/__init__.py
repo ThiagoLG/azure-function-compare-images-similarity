@@ -99,3 +99,4 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
         f"Percentual de semelhança: {percentage}%",
         status_code=200
     )
+    
