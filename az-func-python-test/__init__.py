@@ -2,6 +2,10 @@ import azure.functions as func
 import base64
 import numpy as np
 import cv2
+import pyodbc as pyo
+import pandas as pd
+import json
+
 
 def readb64(uri):
     encoded_data = uri
@@ -9,7 +13,64 @@ def readb64(uri):
     img = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
     return img
 
+
+def getDatabaseItems():
+    strings_connection = ("Driver={SQL Server};"
+                          "Server=thiago-ghebra.database.windows.net,1433;"
+                          "Database=db_beer_catalog;"
+                          "Uid=db_beer_master;"
+                          "Pwd=xxxxxx;"
+                          "Encrypt=yes;"
+                          "TrustServerCertificate=no;"
+                          "Connection Timeout=30;")
+
+    cnn = pyo.connect(strings_connection)
+    print('opened. selecting...')
+
+    query = "SELECT * FROM dbo.breweries"
+    df = pd.read_sql(query, cnn)
+    cnn.close()
+
+    print(df.head(10))
+    print('done')
+
+    return func.HttpResponse(
+        json.dumps({
+            "data": f"{df}"
+        }),
+        mimetype="application/json",
+        status_code=200
+    )
+
+
 def main(req: func.HttpRequest) -> func.HttpResponse:
+
+    strings_connection = ("Driver={SQL Server};"
+                          "Server=thiago-ghebra.database.windows.net,1433;"
+                          "Database=db_beer_catalog;"
+                          "Uid=db_beer_master;"
+                          "Pwd=xxxx;"
+                          "Encrypt=yes;"
+                          "TrustServerCertificate=no;"
+                          "Connection Timeout=30;")
+
+    cnn = pyo.connect(strings_connection)
+    print('opened. selecting...')
+
+    query = "SELECT * FROM dbo.breweries"
+    df = pd.read_sql(query, cnn)
+    cnn.close()
+
+    print(df.head(10))
+    print('done')
+
+    return func.HttpResponse(
+        json.dumps({
+            "data": df.to_json(orient='records')
+        }),
+        mimetype="application/json",
+        status_code=200
+    )
 
     # variáveis de documentos
     doc1 = ''
@@ -65,7 +126,7 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
             status_code=200
         )
     else:
-         return func.HttpResponse(
+        return func.HttpResponse(
             "Problema na leitura dos documentos enviados, por favor, confira os dados e tente novamente",
             status_code=200
         )
