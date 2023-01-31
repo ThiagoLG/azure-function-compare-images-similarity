@@ -19,36 +19,6 @@ def getDatabaseItems():
                           "Server=thiago-ghebra.database.windows.net,1433;"
                           "Database=db_beer_catalog;"
                           "Uid=db_beer_master;"
-                          "Pwd=xxxxxx;"
-                          "Encrypt=yes;"
-                          "TrustServerCertificate=no;"
-                          "Connection Timeout=30;")
-
-    cnn = pyo.connect(strings_connection)
-    print('opened. selecting...')
-
-    query = "SELECT * FROM dbo.breweries"
-    df = pd.read_sql(query, cnn)
-    cnn.close()
-
-    print(df.head(10))
-    print('done')
-
-    return func.HttpResponse(
-        json.dumps({
-            "data": f"{df}"
-        }),
-        mimetype="application/json",
-        status_code=200
-    )
-
-
-def main(req: func.HttpRequest) -> func.HttpResponse:
-
-    strings_connection = ("Driver={SQL Server};"
-                          "Server=thiago-ghebra.database.windows.net,1433;"
-                          "Database=db_beer_catalog;"
-                          "Uid=db_beer_master;"
                           "Pwd=xxxx;"
                           "Encrypt=yes;"
                           "TrustServerCertificate=no;"
@@ -71,6 +41,11 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
         mimetype="application/json",
         status_code=200
     )
+
+
+def main(req: func.HttpRequest) -> func.HttpResponse:
+
+    return getDatabaseItems()
 
     # variáveis de documentos
     doc1 = ''

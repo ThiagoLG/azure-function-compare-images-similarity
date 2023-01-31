@@ -6,3 +6,5 @@ azure-functions
 numpy
 opencv-python
 opencv-contrib-python
+pandas
+pyodbc
