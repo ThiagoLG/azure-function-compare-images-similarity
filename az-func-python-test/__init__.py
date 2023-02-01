@@ -3,7 +3,7 @@ import cv2
 import json
 from .utils.db_utils import *
 from .utils.file_utils import *
-from .utils.repos.breweries_repo import *
+from .repos.breweries_repo import *
 
 # main function called when the azfunc receive a request
 def main(req: func.HttpRequest) -> func.HttpResponse:
