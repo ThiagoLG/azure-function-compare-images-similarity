@@ -1,95 +1,50 @@
 import azure.functions as func
-import base64
-import numpy as np
 import cv2
-import pyodbc as pyo
-import pandas as pd
 import json
+from .utils.db_utils import *
+from .utils.file_utils import *
+from .utils.repos.breweries_repo import *
 
-
-def readb64(uri):
-    encoded_data = uri
-    nparr = np.fromstring(base64.b64decode(encoded_data), np.uint8)
-    img = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
-    return img
-
-
-def getDatabaseItems():
-    strings_connection = ("Driver={SQL Server};"
-                          "Server=thiago-ghebra.database.windows.net,1433;"
-                          "Database=db_beer_catalog;"
-                          "Uid=db_beer_master;"
-                          "Pwd=xxxxxx;"
-                          "Encrypt=yes;"
-                          "TrustServerCertificate=no;"
-                          "Connection Timeout=30;")
-
-    cnn = pyo.connect(strings_connection)
-    print('opened. selecting...')
-
-    query = "SELECT * FROM dbo.breweries"
-    df = pd.read_sql(query, cnn)
-    cnn.close()
-
-    print(df.head(10))
-    print('done')
-
-    return func.HttpResponse(
-        json.dumps({
-            "data": f"{df}"
-        }),
-        mimetype="application/json",
-        status_code=200
-    )
-
-
+# main function called when the azfunc receive a request
 def main(req: func.HttpRequest) -> func.HttpResponse:
-
-    strings_connection = ("Driver={SQL Server};"
-                          "Server=thiago-ghebra.database.windows.net,1433;"
-                          "Database=db_beer_catalog;"
-                          "Uid=db_beer_master;"
-                          "Pwd=xxxx;"
-                          "Encrypt=yes;"
-                          "TrustServerCertificate=no;"
-                          "Connection Timeout=30;")
-
-    cnn = pyo.connect(strings_connection)
-    print('opened. selecting...')
-
-    query = "SELECT * FROM dbo.breweries"
-    df = pd.read_sql(query, cnn)
-    cnn.close()
-
-    print(df.head(10))
-    print('done')
-
-    return func.HttpResponse(
-        json.dumps({
-            "data": df.to_json(orient='records')
-        }),
-        mimetype="application/json",
-        status_code=200
-    )
-
-    # variáveis de documentos
-    doc1 = ''
-    doc2 = ''
-
-    # realiza a leitura através do corpo da requisição
+    
+    # get all data from breweries table
     try:
-        req_body = req.get_json()
-        doc1 = req_body.get('doc1')
-        doc2 = req_body.get('doc2')
+        cnn = get_connection()
+        all_breweries_data = get_all_breweries_data(cnn, True)
+
+        return func.HttpResponse(
+            json.dumps({
+                "data": all_breweries_data
+            }),
+            mimetype="application/json",
+            status_code=200
+    )
     except ValueError:
         return func.HttpResponse(
-            f'Não foi possível processar os documento enviado.',
+            f'Error while try get all data from breweries',
+            status_code=400
+        )    
+
+
+    # init vars to control received doc
+    pic_to_compare = ''
+
+    # read docs from req body
+    try:
+        req_body = req.get_json()
+        pic_to_compare = req_body.get('picture_file')
+    except ValueError:
+        return func.HttpResponse(
+            f'Error trying read received picture.',
             status_code=400
         )
 
-    if doc1 and doc2:
-        # leitura das imagens recebidas
-        original = readb64(doc1)
+    # actions if pic_to_compare exist and if its valid
+    if pic_to_compare:
+
+        # convert images to file
+        original = readb64(pic_to_compare)
         image_to_compare = readb64(doc2)
 
         # realiza a leitura da imagem e obtém pontos chave para comparação
